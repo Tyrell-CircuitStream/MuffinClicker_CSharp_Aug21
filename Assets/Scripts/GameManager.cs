@@ -9,13 +9,19 @@ public struct SaveData
 {
     public int totalClicks;
     public int pointsPerClick;
+    public int pointsPerSecond;
+    public int upgradeButton1Level;
+    public int upgradeButton2Level;
 }
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager instance;
+
     // Score
-    private int totalClicks = 0;
+    public int totalClicks = 0;
     [SerializeField] private int pointsPerClick = 1;
+    [SerializeField] private int pointsPerSecond = 1;
 
     // Floating Text
     [SerializeField] private GameObject floatingTextPrefab;
@@ -23,26 +29,58 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private HeaderUI headerUI = null;
 
+    [SerializeField] private UpgradeButton upgradeButton1;
+    [SerializeField] private UpgradeButton upgradeButton2;
+
+    private float passiveMuffinCooldown = 1f;
 
     private void Awake()
     {
+        instance = this;
         LoadGame();
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        headerUI.UpdateUI(totalClicks);
+        headerUI.UpdateUI(totalClicks, pointsPerSecond);
+
+        //InvokeRepeating(nameof(CollectPassiveMuffin), 5f, 1f);
+    }
+
+    private void CollectPassiveMuffin()
+    {
+        totalClicks += pointsPerSecond;
+        headerUI.UpdateUI(totalClicks, pointsPerSecond);
+        passiveMuffinCooldown = 1;
     }
 
     private void Update()
     {
         if (Input.GetKeyDown("r"))
         {
-            totalClicks = 0;
-            pointsPerClick = 1;
-            headerUI.UpdateUI(totalClicks);
+            ResetGame();
         }
+
+        // Update our passive muffin cooldown
+        passiveMuffinCooldown -= Time.deltaTime;
+
+        if (passiveMuffinCooldown <= 0)
+        {
+            CollectPassiveMuffin();
+        }
+
+    }
+
+    private void ResetGame()
+    {
+        totalClicks = 0;
+        pointsPerClick = 1;
+        pointsPerSecond = 1;
+        upgradeButton1.level = 0;
+        upgradeButton2.level = 0;
+
+        headerUI.UpdateUI(totalClicks, pointsPerSecond);
     }
 
     private void OnApplicationQuit()
@@ -56,7 +94,7 @@ public class GameManager : MonoBehaviour
         totalClicks = totalClicks + pointsPerClick;
 
         // Update UI
-        headerUI.UpdateUI(totalClicks);
+        headerUI.UpdateUI(totalClicks, pointsPerSecond);
 
         // Create the floating text notification
         CreateFloatingText("+" + pointsPerClick);
@@ -96,6 +134,9 @@ public class GameManager : MonoBehaviour
         // Populate the save data object with the game's current state
         saveData.totalClicks = totalClicks;
         saveData.pointsPerClick = pointsPerClick;
+        saveData.pointsPerSecond = pointsPerSecond;
+        saveData.upgradeButton1Level = upgradeButton1.level;
+        saveData.upgradeButton2Level = upgradeButton2.level;
 
         // Convert the save data object into JSON (Serialize it!)
         string saveJSON = JsonUtility.ToJson(saveData);
@@ -127,7 +168,48 @@ public class GameManager : MonoBehaviour
             pointsPerClick = saveData.pointsPerClick;
         }
 
+        pointsPerSecond = saveData.pointsPerSecond;
+        upgradeButton1.level = saveData.upgradeButton1Level;
+        upgradeButton2.level = saveData.upgradeButton2Level;
+
+
     }
 
+    public bool TryToPurchase(int price, UpgradeType upgradeType)
+    {
+        //if (totalClicks < price) return false;
+
+        if (totalClicks < price)
+        {
+            return false;
+        }
+
+
+        totalClicks -= price;
+
+
+        switch(upgradeType)
+        {
+            case UpgradeType.MuffinsPerClick:
+                // TODO: Apply the upgrade
+                pointsPerClick++;
+                break;
+            case UpgradeType.MuffinsPerSecond:
+                // Do our stuff
+                pointsPerSecond++;
+                break;
+        }
+
+        // Update UI
+        headerUI.UpdateUI(totalClicks, pointsPerSecond);
+
+        return true;
+    }
+
+    public void TreatClicked(int points)
+    {
+        totalClicks += points;
+        headerUI.UpdateUI(totalClicks, pointsPerSecond);
+    }
 
 }

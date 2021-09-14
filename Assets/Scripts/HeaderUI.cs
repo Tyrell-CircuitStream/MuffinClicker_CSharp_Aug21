@@ -6,17 +6,28 @@ using UnityEngine;
 public class HeaderUI : MonoBehaviour
 {
     // UI
-    [SerializeField] private TMP_Text muffinText = null;
+    [SerializeField] private TMP_Text muffinsText = null;
+    [SerializeField] private TMP_Text muffinsPerSecondText = null;
 
-    public void UpdateUI(int totalClicks)
+    public void UpdateUI(int totalClicks, int muffinsPerSecond)
     {
         if (totalClicks == 1)
         {
-            muffinText.text = totalClicks.ToString() + " muffin";
+            muffinsText.text = totalClicks.ToString() + " muffin";
         }
         else
         {
-            muffinText.text = totalClicks.ToString() + " muffins";
+            muffinsText.text = totalClicks.ToString() + " muffins";
+        }
+
+        if (muffinsPerSecond == 1)
+        {
+            muffinsPerSecondText.text = muffinsPerSecond.ToString() + " muffin per second";
+        }
+        else
+        {
+            muffinsPerSecondText.text = muffinsPerSecond.ToString() + " muffins per second";
         }
     }
 }
+

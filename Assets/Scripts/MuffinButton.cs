@@ -7,9 +7,10 @@ public class MuffinButton : MonoBehaviour
 {
 
     [SerializeField] private GameManager gameManager = null;
-
+    
     public void OnMuffinClicked()
     {
+        //GameManager.instance.OnMuffinButtonClicked();
         gameManager.OnMuffinButtonClicked();
 
         // Animate Button
